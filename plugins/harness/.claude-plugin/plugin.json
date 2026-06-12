@@ -1,7 +1,7 @@
 {
   "name": "harness",
   "description": "ハーネスエンジニアリング共通基盤。initializer スキルと、harness-rules.json を読む NEVER/CONFIRM 強制エンジン(全許可モードで発火)を提供する。",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": {
     "name": "Koki Takahashi"
   }

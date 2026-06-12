@@ -1,5 +1,5 @@
 {
-  "_doc": "ルール定義の正(source of truth)。rules.md の NEVER/CONFIRM(機械化)節はここから生成される。action: deny(NEVER)|ask(CONFIRM) × layer: permission(L1 静的)|hook(L2 動的)|advisory(強制なし)。hook ルールの match: command_regex(Bash)/ path_glob(編集系、絶対・相対両形に照合)。protect-harness-files 系は削除・改名禁止。",
+  "_doc": "ルール定義の正(source of truth)。rules.md の NEVER/CONFIRM(機械化)節はここから生成される。action: deny(NEVER)|ask(CONFIRM) × layer: permission(L1 静的)|hook(L2 動的)|advisory(強制なし)。hook ルールの match: command_regex(Bash)/ path_glob(編集系、絶対・相対両形に照合)。protect-harness-files 系(-bash companion 含む)は削除・改名禁止。",
   "version": 1,
   "rules": [
     {
@@ -39,6 +39,17 @@
       "reason": "許可設定の改変は人間のみが行う"
     },
     {
+      "id": "protect-harness-files-bash",
+      "description": "ハーネス定義ファイルへの Bash 経由書き込みを禁止(L1/L2 編集系保護の companion)",
+      "action": "deny",
+      "layer": "hook",
+      "match": {
+        "tool": "Bash",
+        "command_regex": "(>|\\btee\\b|\\bsed\\s+-[a-zA-Z]*i|\\b(cp|mv|rm|truncate|touch|dd|ln)\\b)[^|;&]*(\\.claude/settings[^ /]*\\.json|harness-rules\\.json)"
+      },
+      "reason": "編集ツールの deny を Bash(リダイレクト・sed -i・tee・cp/mv 等)で迂回する経路を塞ぐ。誠実なエージェントでもツール失敗時のフォールバックとして自然に踏む経路(v0.2 スモークテストで実証)。改変・修復は人間のみが行う。なお読み出し(cat/grep)と git checkout による修復は発火しない"
+    },
+    {
       "id": "{{NEVER_RULE_ID}}",
       "description": "{{NEVER_RULE_DESCRIPTION}}",
       "action": "deny",
@@ -53,6 +64,15 @@
       "layer": "hook",
       "match": { "tool": "Edit|Write", "path_glob": "{{PATH_GLOB}}" },
       "reason": "{{CONFIRM_RULE_REASON}}"
+    },
+    {
+      "_comment": "↓ path_glob ルールの Bash companion(任意)。インタビューで提案し、ユーザーが採用した場合のみ生成する。action は親ルールを継承(ask の companion は ask)。regex は『書込動詞 + 同一パイプライン区切り内のパス断片』の共起で構成し、読み出しでは発火させない",
+      "id": "{{CONFIRM_RULE_ID}}-bash",
+      "description": "{{CONFIRM_RULE_DESCRIPTION}}(Bash 書込 companion)",
+      "action": "ask",
+      "layer": "hook",
+      "match": { "tool": "Bash", "command_regex": "(>|\\btee\\b|\\bsed\\s+-[a-zA-Z]*i|\\b(cp|mv|rm|truncate|touch|dd|ln)\\b)[^|;&]*{{PATH_FRAGMENT_REGEX}}" },
+      "reason": "{{CONFIRM_RULE_REASON}}(編集ツール失敗時の Bash フォールバックも同じ承認対象とする)"
     },
     {
       "id": "{{ADVISORY_RULE_ID}}",
