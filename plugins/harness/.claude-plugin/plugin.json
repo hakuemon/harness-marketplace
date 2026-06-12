@@ -1,0 +1,8 @@
+{
+  "name": "harness",
+  "description": "ハーネスエンジニアリング共通基盤。プロジェクト調査からハーネス一式を生成する initializer スキルを提供する。",
+  "version": "0.1.0",
+  "author": {
+    "name": "Koki Takahashi"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "meta-harness",
+  "owner": {
+    "name": "Koki Takahashi"
+  },
+  "description": "ハーネスエンジニアリングの共通基盤を配布するマーケットプレイス",
+  "plugins": [
+    {
+      "name": "harness",
+      "source": "./plugins/harness",
+      "description": "プロジェクトを調査し、ハーネス一式(CLAUDE.md ポインタ構造 / NEVER・CONFIRM ルール / 運用ファイル)を初期構築する",
+      "version": "0.1.0",
+      "category": "workflow",
+      "tags": ["harness", "initializer", "claude-md"]
+    }
+  ]
+}
