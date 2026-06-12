@@ -1,0 +1,65 @@
+{
+  "_doc": "ルール定義の正(source of truth)。rules.md の NEVER/CONFIRM(機械化)節はここから生成される。action: deny(NEVER)|ask(CONFIRM) × layer: permission(L1 静的)|hook(L2 動的)|advisory(強制なし)。hook ルールの match: command_regex(Bash)/ path_glob(編集系、絶対・相対両形に照合)。protect-harness-files 系は削除・改名禁止。",
+  "version": 1,
+  "rules": [
+    {
+      "id": "protect-harness-files-l1",
+      "description": "ハーネス定義ファイルを改変から守る(L1)",
+      "action": "deny",
+      "layer": "permission",
+      "deny": [
+        "Edit(.claude/harness-rules.json)",
+        "Write(.claude/harness-rules.json)",
+        "Edit(.claude/settings.json)",
+        "Write(.claude/settings.json)",
+        "Edit(.claude/settings.local.json)",
+        "Write(.claude/settings.local.json)"
+      ]
+    },
+    {
+      "id": "protect-harness-files-l2",
+      "description": "ハーネス定義ファイルを改変から守る(L2 多層防御。MultiEdit 等 L1 の届かない経路をカバー)",
+      "action": "deny",
+      "layer": "hook",
+      "match": {
+        "tool": "Edit|Write|MultiEdit|NotebookEdit",
+        "path_glob": "**/.claude/harness-rules.json"
+      },
+      "reason": "ルールファイル自体の改変は人間のみが行う"
+    },
+    {
+      "id": "protect-harness-settings-l2",
+      "description": "settings の L2 保護(同上)",
+      "action": "deny",
+      "layer": "hook",
+      "match": {
+        "tool": "Edit|Write|MultiEdit|NotebookEdit",
+        "path_glob": "**/.claude/settings*.json"
+      },
+      "reason": "許可設定の改変は人間のみが行う"
+    },
+    {
+      "id": "{{NEVER_RULE_ID}}",
+      "description": "{{NEVER_RULE_DESCRIPTION}}",
+      "action": "deny",
+      "layer": "hook",
+      "match": { "tool": "Bash", "command_regex": "{{COMMAND_REGEX}}" },
+      "reason": "{{NEVER_RULE_REASON}}"
+    },
+    {
+      "id": "{{CONFIRM_RULE_ID}}",
+      "description": "{{CONFIRM_RULE_DESCRIPTION}}",
+      "action": "ask",
+      "layer": "hook",
+      "match": { "tool": "Edit|Write", "path_glob": "{{PATH_GLOB}}" },
+      "reason": "{{CONFIRM_RULE_REASON}}"
+    },
+    {
+      "id": "{{ADVISORY_RULE_ID}}",
+      "description": "{{ADVISORY_RULE_DESCRIPTION}}",
+      "action": "deny",
+      "layer": "advisory",
+      "note": "機械判定不能(ファイル内領域・意味的条件)。L3 実装後の昇格候補"
+    }
+  ]
+}

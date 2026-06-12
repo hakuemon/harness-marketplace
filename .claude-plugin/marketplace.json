@@ -8,10 +8,14 @@
     {
       "name": "harness",
       "source": "./plugins/harness",
-      "description": "プロジェクトを調査し、ハーネス一式(CLAUDE.md ポインタ構造 / NEVER・CONFIRM ルール / 運用ファイル)を初期構築する",
-      "version": "0.1.0",
+      "description": "ハーネス初期構築(initializer)+ NEVER/CONFIRM ルール強制エンジン(PreToolUse フック)",
+      "version": "0.2.0",
       "category": "workflow",
-      "tags": ["harness", "initializer", "claude-md"]
+      "tags": [
+        "harness",
+        "initializer",
+        "claude-md"
+      ]
     }
   ]
 }

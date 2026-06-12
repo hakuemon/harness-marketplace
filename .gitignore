@@ -34,3 +34,7 @@ node_modules/
 
 # rtk (token optimizer)
 .rtk/
+
+# Windows / WSL ファイルメタデータ（Zone.Identifier）
+*:Zone.Identifier
+
