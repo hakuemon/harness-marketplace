@@ -1,0 +1,3 @@
+{
+  "autoMemoryDirectory": "{{ABSOLUTE_PROJECT_PATH}}/docs/claude/memory"
+}
