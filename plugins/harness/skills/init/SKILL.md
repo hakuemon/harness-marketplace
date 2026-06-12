@@ -4,7 +4,7 @@ description: プロジェクトにハーネス一式(CLAUDE.md ポインタ構�
 disable-model-invocation: true
 ---
 
-# Harness Initializer(v0.2)
+# Harness Initializer(v0.2.1)
 
 プロジェクトを調査し、対話で要件を確認した上で、ハーネス一式を生成する。
 生成物はすべてプロジェクトの所有物となる。ただし v0.2 以降、NEVER/CONFIRM ルールの**強制エンジン**(PreToolUse フック)はプラグイン側に常駐し、プロジェクト側の `.claude/harness-rules.json` を実行時に読む。
@@ -30,9 +30,10 @@ disable-model-invocation: true
 
 `templates/interview.md` の質問項目に従う。Phase 0 で判明済みの項目は質問せず、確認結果の追認だけを求める。
 
-v0.2 で重要な追加 2 点:
+重要な確認 3 点:
 - **NEVER 候補の層分類**(interview.md のフロー): 各候補を permission / hook / advisory に仕分け、ユーザーに分類結果を提示して承認を得る
 - **CONFIRM の機械化選定**: ask 機械化は 2〜3 個まで。どれを機械化するかユーザーに確認する
+- **Bash 書込 companion の提案**(v0.2.1): プロジェクト固有の path_glob ルールごとに「Bash 経由の書込も同じ action で拾う companion を付けるか」を確認する(interview.md の該当節参照)。**ハーネス自己保護の companion(protect-harness-files-bash)は確認不要で必ず生成する**
 
 ## Phase 2: 生成
 
@@ -41,14 +42,20 @@ v0.2 で重要な追加 2 点:
 | 生成物 | テンプレート | 役割 |
 |---|---|---|
 | `CLAUDE.md` | `CLAUDE.md.template` | リーンなポインタ。詳細は docs/claude/ に委譲 |
-| `.claude/harness-rules.json` | `harness-rules.json.template` | **ルール定義の正**。protect-harness-files 系の固定ルールは必ず含め、削除・改名しない |
+| `.claude/harness-rules.json` | `harness-rules.json.template` | **ルール定義の正**。protect-harness-files 系の固定ルール(**-bash companion 含む 4 件**)は必ず含め、削除・改名しない |
 | `.claude/settings.json` | `settings.json.template` | L1: `layer:"permission"` ルールの deny を反映(固定の自己保護 deny 6 件+プロジェクト固有分) |
 | `.claude/settings.local.json` | `settings.local.json.template` | `autoMemoryDirectory` を**絶対パス**で設定(下記の注意参照) |
-| `docs/claude/rules.md` | `rules.md.template` | NEVER/CONFIRM(機械化)節を harness-rules.json から**生成**して埋める。散文 CONFIRM はインタビューから記入 |
+| `docs/claude/rules.md` | `rules.md.template` | NEVER/CONFIRM(機械化)節を harness-rules.json から**生成**して埋める。散文 CONFIRM はインタビューから記入。Bash 書込禁止の注記とモード別実効性の注記はテンプレート組み込み |
 | `docs/claude/operation.md` | `operation.md.template` | 運用サイクル+Auto memory 規約+運用観察項目 |
 | `docs/claude/checklist.md` | `checklist.md.template` | 状態とタスクの単一情報源 |
 | `docs/claude/deviation-log.md` | `deviation-log.md.template` | 逸脱記録。初期構築の記録と python3 検証結果を記入 |
 | `docs/claude/memory/` | —(空ディレクトリ+.gitkeep) | Auto memory の保存先(コミット対象) |
+
+**companion ルールの生成規則(v0.2.1):**
+- 親ルールの直後に置き、id は `<親id>-bash`、action は親を継承する
+- regex は「書込動詞 + 同一パイプライン区切り内のパス断片」: `(>|\btee\b|\bsed\s+-[a-zA-Z]*i|\b(cp|mv|rm|truncate|touch|dd|ln)\b)[^|;&]*<パス断片regex>`
+- パス断片はプロジェクト相対の特徴的な部分を使う(例: `docs/protected/`)。固有名ファイルは bare 名でも拾う(例: harness-rules\.json)が、`settings.json` のような一般名は必ずディレクトリ接頭辞付きにする(他用途ファイルへの誤発動防止)
+- 生成した regex は**真陽性・偽陽性の双方を含む机上テスト**(python3 の re.search で 5〜10 ケース)を実行して提示し、承認を得る
 
 **autoMemoryDirectory の注意(settings.local.json に置く理由):** 公式仕様で値は絶対パスまたは `~/` 始まりが必須。絶対パスはマシン固有になるため、共有される settings.json ではなく gitignore される settings.local.json に置く。プロジェクトの絶対パスは生成時に `pwd` で解決して埋め込む。**別マシンや clone 直後は settings.local.json が無いため、本スキルの再実行(または手動再生成)が必要** — この注意を deviation-log.md にも記載する。
 
@@ -58,14 +65,16 @@ v0.2 で重要な追加 2 点:
 1. 既存ファイルとテンプレート構造の対応表を作る(維持 / 移動 / 分割 / 新規作成)
 2. 既存 CLAUDE.md にインライン展開された詳細は docs/claude/ 配下へ移動する計画を立てる
 3. **既存 rules.md がある場合(v0.1 → v0.2 移行):** NEVER/CONFIRM ルールを抽出し、層分類(interview.md のフロー)を適用して harness-rules.json への変換案を提示する。rules.md の該当節は生成式に置き換える
-4. **既存 .claude/settings.json がある場合:** 上書きせず、permissions.deny への追記と autoMemoryDirectory 追加(settings.local.json 側)の**マージ差分**を提示する
-5. 計画の承認後に適用し、移動・分割・変換の判断はすべて deviation-log.md に記録する
+4. **既存 harness-rules.json がある場合(v0.2 → v0.2.1 移行):** `protect-harness-files-bash` の有無を確認し、無ければ追加差分を提示する(ルールファイルは人間編集のため、**差分の適用は人間に依頼する**)。既存 path_glob ルールへの companion 追加も提案する
+5. **既存 .claude/settings.json がある場合:** 上書きせず、permissions.deny への追記と autoMemoryDirectory 追加(settings.local.json 側)の**マージ差分**を提示する
+6. 計画の承認後に適用し、移動・分割・変換の判断はすべて deviation-log.md に記録する
 
 ## Phase 3: レポートと検証
 
 1. 生成・変更したファイルの一覧と各ファイルの役割を報告する
 2. ユーザーに検証手順を提示する:
    - **新しいセッションを開始する**(CLAUDE.md・フック設定はセッション開始時に読み込まれる)
+   - **`/hooks` で PreToolUse に harness@meta-harness 由来のフック 2 件(編集系・Bash)が実在することを確認する**(v0.2.1: プラグインのインストール/更新直後はフックがロードされないことがある — フック不在のままテストや自律運用を始めない)
    - **ワークスペース信頼ダイアログを承認する**(settings.local.json の autoMemoryDirectory は承認後に有効。承認前に自律実行を始めない)
-   - マーケットプレイス README のスモークテスト(L1 貫通・L2 deny/ask・bypass 変換・破損クローズ)を実施する
-3. 未完了の項目(advisory に分類した昇格候補ルール、python3 不在時の L2 保留など)を deviation-log.md の「残課題」節に記録する
+   - マーケットプレイス README のスモークテスト(L1 貫通・L2 deny/ask・bypass 変換・Bash companion・破損クローズ)を実施する
+3. 未完了の項目(advisory に分類した昇格候補ルール、python3 不在時の L2 保留、companion を見送った path_glob ルールなど)を deviation-log.md の「残課題」節に記録する

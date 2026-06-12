@@ -8,6 +8,8 @@
 <!-- GENERATED FROM .claude/harness-rules.json (action=deny, layer=permission|hook) — DO NOT EDIT -->
 {{GENERATED_NEVER_SECTION}}
 
+> **Bash 経由でも同じ。**上記の保護(path_glob / permission)は編集ツールを対象とするが、Bash のリダイレクト(`>` `>>`)・`sed -i`・`tee`・`cp`/`mv` 等による書き込みも**同様に禁止**である。代表的パターンは companion ルール(`*-bash`)が機械的にブロックするが、regex に拾われない書き方でも禁止の意味は変わらない。**編集ツールが失敗しても、Bash を代替手段にしないこと。**失敗したら停止して人間に報告する。
+
 ## NEVER — advisory(強制なし。プロンプト遵守+L3 実装後の昇格候補)
 
 <!-- GENERATED FROM .claude/harness-rules.json (layer=advisory) — DO NOT EDIT -->
@@ -18,7 +20,14 @@
 <!-- GENERATED FROM .claude/harness-rules.json (action=ask) — DO NOT EDIT -->
 {{GENERATED_CONFIRM_SECTION}}
 
-> **注意: 上記の ask/deny は Plan mode 承認の代替ではない。**該当操作は事前に operation.md の計画手順(Plan → Review)を踏むこと。バックストップが発動した状態は「規約をすり抜けて実行に達した」ことを意味する。通常モードではダイアログ確認、自律実行(bypassPermissions)では停止+計画提示が求められる。
+> **注意: 上記の ask/deny は Plan mode 承認の代替ではない。**該当操作は事前に operation.md の計画手順(Plan → Review)を踏むこと。バックストップが発動した状態は「規約をすり抜けて実行に達した」ことを意味する。
+>
+> **モード別の実効性(v0.2 実機検証に基づく):**
+> - **auto / acceptEdits**(編集自動承認): ask が割り込み、本来出ないはずの確認ダイアログを出す。**これが ask の主戦場**(Plan 承認後の自動実行中のセーフティネット)
+> - **通常(default)**: 全編集に標準確認が出るため、ask 由来かは画面上区別できない(理由文も表示されない)。実質的な追加防御は薄い
+> - **bypassPermissions**(自律実行): ask は **deny+停止指示**に変換される。エージェントは作業を中断し、計画を提示して人間の承認を待って終わること
+>
+> CONFIRM 対象の操作も、編集ツール失敗時に Bash で代替してはならない(上記 NEVER の Bash 注記と同様。companion ルールがある場合は機械的にも ask になる)。
 
 ## CONFIRM — 規約(散文。実行前に Plan mode で承認必須)
 
