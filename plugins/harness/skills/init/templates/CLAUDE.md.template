@@ -1,0 +1,27 @@
+# {{PROJECT_NAME}}
+
+{{PROJECT_SUMMARY}}
+
+- 技術スタック: {{TECH_STACK}}
+- フェーズ成熟度: {{PHASE}}({{PHASE_LABEL}})
+
+## ルール(常時適用)
+
+@docs/claude/rules.md
+
+- **NEVER**: 絶対禁止。例外なし。理由を問わず実行しない。
+- **CONFIRM**: 実行前に Plan mode で計画を提示し、承認を得てから実行する。
+
+## 運用ドキュメント(必要時に読むこと)
+
+以下は意図的に @import していない。該当する作業のときに Read で参照すること。
+
+- 作業サイクルとセッション開始・終了手順: `docs/claude/operation.md`
+- 現在の状態とタスク一覧: `docs/claude/checklist.md`
+- ハーネス変更履歴と残課題: `docs/claude/deviation-log.md`
+
+## コマンド
+
+- ビルド: `{{BUILD_COMMAND}}`
+- テスト: `{{TEST_COMMAND}}`
+- 開発サーバー: `{{DEV_COMMAND}}`

@@ -1,0 +1,20 @@
+# ルール定義
+
+このファイルは CLAUDE.md から常時インポートされる。簡潔さを維持すること(目安: 50 行以内)。
+
+## NEVER — 絶対禁止(将来の Hook 化対象)
+
+<!-- プロジェクト固有の構成を守る具体的なルールを書く。
+     例: 「Tailwind v4 の @theme {} ブロックを変更しない」
+         「DevContainer の DNS 設定を変更しない」
+         「.claude/ を git 管理から外さない」 -->
+
+- {{NEVER_RULE_1}}
+- {{NEVER_RULE_2}}
+
+## CONFIRM — 実行前に Plan mode で承認必須
+
+<!-- 例: 「DB マイグレーションの作成・変更」「依存ライブラリの追加・更新」 -->
+
+- {{CONFIRM_RULE_1}}
+- {{CONFIRM_RULE_2}}
