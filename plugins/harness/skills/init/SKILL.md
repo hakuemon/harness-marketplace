@@ -34,6 +34,7 @@ disable-model-invocation: true
 - **NEVER 候補の層分類**(interview.md のフロー): 各候補を permission / hook / advisory に仕分け、ユーザーに分類結果を提示して承認を得る
 - **CONFIRM の機械化選定**: ask 機械化は 2〜3 個まで。どれを機械化するかユーザーに確認する
 - **Bash 書込 companion の提案**(v0.2.1): プロジェクト固有の path_glob ルールごとに「Bash 経由の書込も同じ action で拾う companion を付けるか」を確認する(interview.md の該当節参照)。**ハーネス自己保護の companion(protect-harness-files-bash)は確認不要で必ず生成する**
+- **git ワークフローの採用可否と規約値**(v0.2.2): git ワークフロー(ブランチ→コミット→PR の自律出荷)を採用するか確認する。採用する場合は base ブランチ名・TYPE 語彙・コミット言語・マージ方式・**MERGE_MODE(auto/manual)**を確認する(interview.md の該当節参照)。git で管理されていないプロジェクトでは丸ごとスキップする
 
 ## Phase 2: 生成
 
@@ -50,6 +51,7 @@ disable-model-invocation: true
 | `docs/claude/checklist.md` | `checklist.md.template` | 状態とタスクの単一情報源 |
 | `docs/claude/deviation-log.md` | `deviation-log.md.template` | 逸脱記録。初期構築の記録と python3 検証結果を記入 |
 | `docs/claude/memory/` | —(空ディレクトリ+.gitkeep) | Auto memory の保存先(コミット対象) |
+| `docs/claude/git-flow.md` | `git-flow.md.template` | **git ワークフロー採用時のみ**。base ブランチ・TYPE 語彙・MERGE_MODE・PR テンプレ・検証コマンドの規約値。git-flow スキルが参照する(v0.2.2) |
 
 **companion ルールの生成規則(v0.2.1):**
 - 親ルールの直後に置き、id は `<親id>-bash`、action は親を継承する
@@ -57,7 +59,16 @@ disable-model-invocation: true
 - パス断片はプロジェクト相対の特徴的な部分を使う(例: `docs/protected/`)。固有名ファイルは bare 名でも拾う(例: harness-rules\.json)が、`settings.json` のような一般名は必ずディレクトリ接頭辞付きにする(他用途ファイルへの誤発動防止)
 - 生成した regex は**真陽性・偽陽性の双方を含む机上テスト**(python3 の re.search で 5〜10 ケース)を実行して提示し、承認を得る
 
-**autoMemoryDirectory の注意(settings.local.json に置く理由):** 公式仕様で値は絶対パスまたは `~/` 始まりが必須。絶対パスはマシン固有になるため、共有される settings.json ではなく gitignore される settings.local.json に置く。プロジェクトの絶対パスは生成時に `pwd` で解決して埋め込む。**別マシンや clone 直後は settings.local.json が無いため、本スキルの再実行(または手動再生成)が必要** — この注意を deviation-log.md にも記載する。
+**git ワークフロー(git-flow)の生成(v0.2.2・採用時のみ):**
+- `docs/claude/git-flow.md` を `git-flow.md.template` から生成。プレースホルダを Phase 1 の回答で置換する: `{{BASE_BRANCH}}` / `{{TYPE_VOCABULARY}}`(表形式)/ `{{COMMIT_LANG}}` / `{{MERGE_STRATEGY}}` / `{{MERGE_MODE}}` / `{{BRANCH_EXAMPLES}}` / `{{VERIFY_CHECKLIST}}` / `{{VERIFY_COMMANDS}}`。検証コマンドは CLAUDE.md のビルド/テストコマンドと一致させる
+- `.claude/harness-rules.json` に **`no-direct-push-to-base` ルールを追加**(harness-rules.json.template の該当ルールを含める)。`{{BASE_BRANCH}}` を実際の base 名に置換する
+- **base push ルールの机上テスト**: 置換後の regex を python3 の re.search で真陽性・偽陽性両方を検証して提示する(例: `git push origin <base>` → deny / `git push origin feature/<base>-x` → 素通り / `git push -u origin feat/x` → 素通り)。承認を得てからルールを確定する
+- **MERGE_MODE の扱い(安全側デフォルト = manual):** init は **MERGE_MODE=manual で生成する**(`no-merge-on-manual` ルールを含める=`gh pr merge` を deny)。git-flow.md の MERGE_MODE 値も `manual` にする。**auto へ移行するのは人間の明示的判断**(`no-merge-on-manual` ルールを削除し、git-flow.md の値を `auto` に変える=安全装置を外すには意図的操作が要る)。フェーズの実行時条件はエンジンでなく「ルールの有無」で表現する(エンジン無変更)
+- **base 上での直接 commit は強制層では止めない**(ユーザー確認済みの設計判断)。守るべき境界は「リモート base への push=不可逆な公開」で、これは `no-direct-push-to-base` が止める。ローカル base 上 commit は巻き戻し容易なため教育層(git-flow スキル step 2)に委ねる。**git-guard.sh は生成しない**(その役割は base push ルール + no-merge-on-manual ルール + 教育層に分解吸収された)。settings.json への追加フック登録は不要
+- git-flow スキル本体(プラグイン側 skills/git-flow/)は init の生成対象ではない(プラグイン同梱・全プロジェクト共通)。プロジェクト側に生成するのは規約値(git-flow.md)とルール(harness-rules.json への追加 2 件)のみ
+
+
+ 公式仕様で値は絶対パスまたは `~/` 始まりが必須。絶対パスはマシン固有になるため、共有される settings.json ではなく gitignore される settings.local.json に置く。プロジェクトの絶対パスは生成時に `pwd` で解決して埋め込む。**別マシンや clone 直後は settings.local.json が無いため、本スキルの再実行(または手動再生成)が必要** — この注意を deviation-log.md にも記載する。
 
 **新規プロジェクトの場合:** 上記をそのまま生成し、生成内容の全文を提示して承認を得る。
 

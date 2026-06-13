@@ -48,6 +48,30 @@ path_glob で保護する NEVER / CONFIRM ルール(permission / hook とも)に
 - companion の regex は「書込動詞 + 同一パイプライン区切り内のパス断片」の共起で生成する(読み出し系 cat/grep や、人間の修復手順 git checkout では発火しない形にする)。生成例はテンプレートの `{{CONFIRM_RULE_ID}}-bash` を参照
 - **限界を必ず説明する**: `cd` 後の短い相対パス・変数展開・インタプリタ経由(`python -c` 等)の書込は拾えない。これはヒューリスティックであり、根本解は L3(意味判定)の守備範囲
 
+## git ワークフロー(git-flow)の採用(v0.2.2)
+
+git で管理され、ブランチ+PR ベースの開発を行うプロジェクトでは、**git-flow スキル**(実装完了タスクを自律出荷する)を採用できる。採用する場合、以下を確認する。git 管理外のプロジェクトでは本節を丸ごとスキップする。
+
+1. **採用するか** — 自律的な git 出荷(ブランチ作成→コミット→push→PR)を行うか。試験稼働フェーズで特に有効
+2. **base ブランチ名** — PR の向き先・分岐元(`main` / `master` / `develop` 等。調査で推定可能なことが多い)
+3. **TYPE 語彙** — ブランチ名・コミット接頭辞の種別(既定: feat/fix/style/refactor/docs/chore。プロジェクトで増減可)
+4. **コミットメッセージ言語** — 日本語 / 英語 等
+5. **マージ方式** — squash / merge / rebase、ブランチ削除の有無
+6. **MERGE_MODE** — **特に重要**。git-flow スキルのマージ段階の挙動を決める
+   - `auto`: 試験稼働。検証が緑なら Claude がマージまで自律実行する(レビューゲートなし)
+   - `manual`: 本番。Claude は PR 作成で停止し、マージは人間が実行する(PR がレビューゲート)
+   - **安全側デフォルトは manual**。init は manual で生成する(`no-merge-on-manual` ルール=`gh pr merge` を deny を含める)。auto に移行するのは人間の明示的判断(ルールを削除し git-flow.md の値を変える=安全装置を外すには意図的操作が要る)
+   - **フェーズ成熟度と相関するが同一ではない**ことを説明する(本番でも開発ブランチは auto にしたい場合がある)
+7. **PR 本文テンプレと検証コマンド** — PR の動作確認チェックリストに載せる検証項目。CLAUDE.md のビルド/テストコマンドと一致させる
+
+### git-flow 採用時に生成・追加されるもの(ユーザーに説明する)
+
+- `docs/claude/git-flow.md`(規約値の正。上記回答を反映。MERGE_MODE は既定 manual)
+- `.claude/harness-rules.json` に 2 ルール追加(机上テストを提示して承認を得る):
+  - `no-direct-push-to-base`: base への直接 push を deny(リモート base=公開を守る)
+  - `no-merge-on-manual`: MERGE_MODE=manual のとき `gh pr merge` を deny(既定で含める。auto 移行時に人間が削除)
+- **base 上での直接 commit は強制層では止めない**(設計判断): 守るべき境界はリモート base への push であり、それは上記ルールが止める。ローカル commit は巻き戻し容易なため教育層(git-flow スキル)に委ねる。**git-guard.sh は生成せず、settings.json への追加フック登録も不要**
+
 ## 任意項目
 
 - 初期タスク(checklist.md に載せる 3〜10 個)。なければ「タスクは後で追加」と記載
