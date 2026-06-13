@@ -19,6 +19,7 @@
 - 作業サイクルとセッション開始・終了手順: `docs/claude/operation.md`
 - 現在の状態とタスク一覧: `docs/claude/checklist.md`
 - ハーネス変更履歴と残課題: `docs/claude/deviation-log.md`
+- git ワークフロー規約(採用時): `docs/claude/git-flow.md`
 - Claude の Auto memory: `docs/claude/memory/`(自動管理。人間は手動編集しない)
 
 ## コマンド

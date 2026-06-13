@@ -1,0 +1,106 @@
+# git ワークフロー規約
+
+git-flow スキルが参照するプロジェクト固有の規約値。**このファイルが規約の正**。
+スキル本体(プラグイン側)は手順のみを持ち、具体値はここから読む。
+変更は人間が行い(規約変更はレビュー対象)、deviation-log.md に記録する。
+
+## 規約値
+
+| 値 | このプロジェクトの設定 |
+|---|---|
+| base ブランチ | {{BASE_BRANCH}} |
+| マージ方式 | {{MERGE_STRATEGY}} |
+| コミットメッセージ言語 | {{COMMIT_LANG}} |
+| **MERGE_MODE** | {{MERGE_MODE}} |
+
+> **MERGE_MODE の意味**
+> - `manual`(**既定・安全側**): Claude は PR 作成で停止する。マージは人間が GitHub 上で実行する(PR がレビューゲート)。`.claude/harness-rules.json` に `no-merge-on-manual` ルール(`gh pr merge` を deny)が含まれる
+> - `auto`: 検証が緑なら Claude がマージまで自律実行する。レビューゲートなし。`no-merge-on-manual` ルールを**削除**した状態
+>
+> MERGE_MODE はフェーズ成熟度と相関するが同一ではない(本番でも開発ブランチは
+> auto にしたい場合がある)。**切り替え方法**: 本ファイルの値と `harness-rules.json` の
+> `no-merge-on-manual` ルールの有無を一致させる(manual=ルール在り / auto=ルール無し)。
+> ルールの追加・削除は人間が行う(安全装置を外すには意図的操作が要る=権限分立)。
+
+### MERGE_MODE の切り替え手順(人間が行う)
+
+本ファイルの値と `harness-rules.json` の `no-merge-on-manual` ルールは**2 箇所で 1 つの状態**を表す。必ず両方を揃える。ルールファイルは人間のみが編集する(Claude Code は不可侵)。
+
+**auto にする(マージまで自律化する):**
+1. `.claude/harness-rules.json` から `no-merge-on-manual` ルール(オブジェクト 1 件)を削除する
+2. 本ファイルの MERGE_MODE を `auto` に書き換える
+3. `docs/claude/rules.md` の生成節を再生成する(Claude に依頼してよい)
+4. 変更理由を `docs/claude/deviation-log.md` に記録する
+
+**manual に戻す(安全側へ・既定):**
+1. `.claude/harness-rules.json` に `no-merge-on-manual` ルールを再追加する(下記参照)
+2. 本ファイルの MERGE_MODE を `manual` に書き換える
+3. 同上(rules.md 再生成・逸脱ログ記録)
+
+`no-merge-on-manual` ルールの定義(再追加時に使う):
+```json
+{
+  "id": "no-merge-on-manual",
+  "description": "MERGE_MODE=manual: PR のマージは人間が実行する(gh pr merge を禁止)",
+  "action": "deny",
+  "layer": "hook",
+  "match": { "tool": "Bash", "command_regex": "gh\\s+pr\\s+merge\\b" },
+  "reason": "本番運用フェーズ(MERGE_MODE=manual)です。PR のマージは人間が GitHub 上で実行してください。auto へ移行する場合は本ルールを削除する"
+}
+```
+
+### ドリフト(2 箇所の不一致)の検出と修復
+
+本ファイルの MERGE_MODE と `no-merge-on-manual` ルールの有無が食い違うと、教育層(本ファイル・スキル)と強制層(ルール)が矛盾した状態になる。**自動では直さない**(ルールの自動書き換えは権限分立に反するため)。git-flow スキルや人間が食い違いに気づいたら、以下で修復する:
+
+| 状態 | 意味 | 修復 |
+|---|---|---|
+| MERGE_MODE=`manual` かつ ルール**無し** | 強制が外れている(危険側) | 上記「manual に戻す」手順 1〜3 を実行(ルールを再追加)。**安全側なのでこちらを優先** |
+| MERGE_MODE=`auto` かつ ルール**有り** | マージが常に deny され自律できない(過剰側) | 「auto にする」手順 1〜3、または MERGE_MODE を `manual` に直して整合させる(どちらが意図か人間が判断) |
+
+どちらの修復も**人間がルールファイルを編集**する。判断に迷う場合は安全側(manual=ルール有り)に倒す。
+
+
+## ブランチ命名
+
+`TYPE/english-brief-description` に統一する。
+
+| TYPE | 用途 |
+|---|---|
+{{TYPE_VOCABULARY}}
+
+例: {{BRANCH_EXAMPLES}}
+
+## コミットメッセージ
+
+- 形式: `TYPE: {{COMMIT_LANG}}の説明`
+- 1 論理変更 = 1 コミット。無関係な変更を混ぜない。
+
+## PR テンプレート
+
+- タイトル: `TYPE/english-brief-description`(ブランチ名と揃える)
+- base は必ず `{{BASE_BRANCH}}`
+- 本文:
+
+```markdown
+## 概要
+<このPRで何をしたか>
+
+## 変更内容
+- <変更点>
+
+## 動作確認
+{{VERIFY_CHECKLIST}}
+
+## 備考
+<あれば>
+```
+
+## 検証コマンド(step 5 で実行)
+
+PR をマージ可能とする前に、以下を全て緑にする。中身は CLAUDE.md のコマンド定義と一致させる。
+
+{{VERIFY_COMMANDS}}
+
+> 検証コマンドの実体はこのプロジェクト固有。git-flow スキルはこのリストを実行し、
+> 全て緑であることだけを確認する(スキルはコマンドの中身を知らない)。

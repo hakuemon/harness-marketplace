@@ -48,6 +48,12 @@ harness-marketplace/
 3. **rules.md テンプレ更新**: 「Bash 経由でも同じ(編集ツール失敗時に Bash で代替しない)」の散文 NEVER と、ask のモード別実効性の注記を組み込み
 4. **検証手順の更新**: セッション再起動後に `/hooks` でプラグイン由来フックの実在を確認するゲートを追加(インストール/更新直後はフックがロードされないことがある — 実機で確認)
 
+## v0.2.2 の変更点
+
+1. **git-flow スキル**(`skills/git-flow/`): 実装完了タスクを規約に従って自律出荷(ブランチ→コミット→push→PR)する。発動の錨は checklist のタスク完了。**PR まで自律 / マージは MERGE_MODE(auto / manual)で分岐**(manual では PR が人間のレビューゲート)。教育層であり、強制は harness-rules.json が担う二段構え(追加フックや settings.json 改変は不要)
+2. **init の git-flow 統合**: /harness:init が採用可否と規約値(base ブランチ・TYPE 語彙・MERGE_MODE 等)を確認し、`docs/claude/git-flow.md`(規約値)と 2 ルール(`no-direct-push-to-base`=base 直 push を deny / `no-merge-on-manual`=MERGE_MODE=manual 時に `gh pr merge` を deny)を生成する。**安全側デフォルト = manual**(auto 移行は人間がルールを削除)。git 管理外プロジェクトではスキップ。base 上 commit は教育層に委ね、追加フック・settings.json 改変は不要
+3. **エンジンのテスト資産**(`tests/`): harness-guard.py の pytest 回帰テスト 33 ケース(終了経路の不変条件・deny 優先・path 両形照合・companion 真陽性/偽陽性・失敗時 A/B/C 等)+ GitHub Actions CI(py3.10/3.12)。エンジン改修時の回帰を自動検出
+
 ## インストール
 
 ```
@@ -86,7 +92,8 @@ harness-marketplace/
 
 - **v0.1**: initializer スキル(完了)
 - **v0.2**: NEVER/CONFIRM ルール強制エンジン+Auto memory 運用(**実機スモークテスト合格 2026-06-12**)
-- **v0.2.1**(現在): スモークテストの発見への対応 — Bash 書込 companion(固定+提案制)、ask モード依存性の文書化、フック実在確認ゲート
+- **v0.2.1**: スモークテストの発見への対応 — Bash 書込 companion(固定+提案制)、ask モード依存性の文書化、フック実在確認ゲート
+- **v0.2.2**(現在): git-flow スキル(自律出荷・MERGE_MODE 分岐)+ init 統合、エンジンのテスト資産(pytest 33 + CI)。強制は harness-rules.json の 2 ルールに集約(エンジン無変更・追加フック不要)
 - **v0.3**: 運用サイクルのスキル化(/harness:plan, /harness:report)+ Stop フック終了ゲート(申し送り: ①ゲート条件は運用スキルの完了定義から導出 ②対話/自律でモード分岐 ③ループ防止と解除経路 ④checklist×git status 照合)
 - **v0.4**: /harness:update(逸脱ログを読んでテンプレート新版との差分を提案)
 - **v0.5**: レビュー・検証サブエージェント
