@@ -1,0 +1,35 @@
+name: harness-guard tests
+
+# 設計レビュー指摘1への対応: エンジン改修時の回帰を自動検出する。
+# harness-guard.py は標準ライブラリのみ・テスト依存は pytest のみ。
+
+on:
+  push:
+    paths:
+      - "plugins/harness/scripts/**"
+      - "plugins/harness/tests/**"
+      - ".github/workflows/harness-tests.yml"
+  pull_request:
+    paths:
+      - "plugins/harness/scripts/**"
+      - "plugins/harness/tests/**"
+  workflow_dispatch:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # 動作要件(WSL2 / Linux + python3)に合わせ複数 3.x で確認
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install pytest
+        run: pip install pytest
+      - name: Run harness-guard tests
+        working-directory: plugins/harness
+        run: python3 -m pytest tests/ -v
