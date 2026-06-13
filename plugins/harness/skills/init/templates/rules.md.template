@@ -1,7 +1,7 @@
 # ルール定義
 
 **運用上の正は `.claude/harness-rules.json`。**「生成」マーク付きの節は JSON からの描画結果であり、**直接編集禁止**。
-変更フロー: harness-rules.json を編集(人間のみ)→ 本ファイルの該当節を再生成 → deviation-log.md に記録。
+変更フロー: harness-rules.json を編集(**実行エージェント=Claude Code は不可侵**。起草は書込手段を持たない隔離環境〔Claude.ai 等〕で行い、人間が内容を確認した上で貼付する=レビューゲート)→ 本ファイルの該当節を再生成 → deviation-log.md に記録。
 
 ## NEVER — 絶対禁止(機械強制: L1 permission / L2 hook)
 
