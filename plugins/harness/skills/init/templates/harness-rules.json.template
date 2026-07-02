@@ -62,18 +62,6 @@
       "reason": "base への直接 push は禁止。作業ブランチを push し gh pr create で PR を作成すること。教育層は git-flow スキルが担い、本ルールはバックストップ"
     },
     {
-      "_comment": "↓ git-flow 採用かつ MERGE_MODE=manual のとき含める(v0.2.2)。init はデフォルト manual で生成する(安全側)。auto に上げるとき、人間がこのルールを削除する=危険側への変更ほど人間の明示操作を要する設計。base 上 commit は教育層(git-flow スキル step2)に委ね、強制層では止めない(リモート push は no-direct-push-to-base が止めるため、ローカル commit の汚れは実害が小さい)",
-      "id": "no-merge-on-manual",
-      "description": "MERGE_MODE=manual 中の gh pr merge を禁止(マージは人間が GitHub 上で実行)",
-      "action": "deny",
-      "layer": "hook",
-      "match": {
-        "tool": "Bash",
-        "command_regex": "gh\\s+pr\\s+merge\\b"
-      },
-      "reason": "本番運用フェーズ(MERGE_MODE=manual)。PR のマージは人間が GitHub 上で実行する(PR が人間のレビューゲート)。auto に移行する場合は人間が本ルールを削除する"
-    },
-    {
       "_comment": "↓ git-flow 採用かつ MERGE_MODE=manual のとき含める(v0.2.2)。gh pr merge を deny し、マージを人間に委ねる(PR がレビューゲート)。**安全側デフォルト: init は manual=本ルール在りで生成する。** auto に移行する人間が本ルールを明示的に削除する(安全装置を外すには意図的な操作が要る=権限分立と整合)。MERGE_MODE は git-flow.md の値と本ルールの有無を一致させること(エンジンは『ルールが在るか』だけを見る=フェーズ依存判定をルールの有無で表現。エンジン無変更)",
       "id": "no-merge-on-manual",
       "description": "MERGE_MODE=manual: PR のマージは人間が実行する(gh pr merge を禁止)",
