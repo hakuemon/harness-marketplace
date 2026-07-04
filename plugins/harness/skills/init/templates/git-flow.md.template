@@ -29,7 +29,7 @@ git-flow スキルが参照するプロジェクト固有の規約値。**この
 **auto にする(マージまで自律化する):**
 1. `.claude/harness-rules.json` から `no-merge-on-manual` ルール(オブジェクト 1 件)を削除する
 2. 本ファイルの MERGE_MODE を `auto` に書き換える
-3. `docs/claude/rules.md` の生成節を再生成する(Claude に依頼してよい)
+3. `docs/claude/rules.md` の生成節を再生成する(`python3 ${CLAUDE_PLUGIN_ROOT}/scripts/harness-verify.py render` を実行する。`/harness:verify` スキル経由なら dry-run diff → 承諾 → render の流れで案内される)
 4. 変更理由を `docs/claude/deviation-log.md` に記録する
 
 **manual に戻す(安全側へ・既定):**

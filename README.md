@@ -54,6 +54,14 @@ harness-marketplace/
 2. **init の git-flow 統合**: /harness:init が採用可否と規約値(base ブランチ・TYPE 語彙・MERGE_MODE 等)を確認し、`docs/claude/git-flow.md`(規約値)と 2 ルール(`no-direct-push-to-base`=base 直 push を deny / `no-merge-on-manual`=MERGE_MODE=manual 時に `gh pr merge` を deny)を生成する。**安全側デフォルト = manual**(auto 移行は人間がルールを削除)。git 管理外プロジェクトではスキップ。base 上 commit は教育層に委ね、追加フック・settings.json 改変は不要
 3. **エンジンのテスト資産**(`tests/`): harness-guard.py の pytest 回帰テスト 33 ケース(終了経路の不変条件・deny 優先・path 両形照合・companion 真陽性/偽陽性・失敗時 A/B/C 等)+ GitHub Actions CI(py3.10/3.12)。エンジン改修時の回帰を自動検出
 
+## v0.3 の変更点
+
+- **`/harness:verify` を追加**(設計レビュー指摘2への対応): 生成物の整合検証。`check`(A: harness-rules.json 構造 / B: rules.md ドリフト / C: settings↔L1 整合 / D: MERGE_MODE 整合 / E: 運用ゲート)・`render`(rules.md 生成節の決定的再生成)・`template`(テンプレート lint、CI 組込済)
+- **決定的レンダラ**: rules.md の生成節は文字通り f(harness-rules.json) の出力になり、「JSON が正・md は描画結果」が機械保証に格上げされた。維持フローの「Claude に再生成を依頼」は「render 実行」に置換
+- **終了コード規約**: verify は 0(緑)/ 2(所見)/ 3(内部エラー)。**exit 1 はリポジトリ全域で意図的に不使用**(未知のクラッシュ経路のカナリア)
+- **既存プロジェクトの移行**: [docs/MIGRATION-0.2.2-to-0.3.md](docs/MIGRATION-0.2.2-to-0.3.md)(rules.md のマーカー差し替え+初回 render のみ)
+- 設計記録: [docs/design/harness-verify-spec.md](docs/design/harness-verify-spec.md)
+
 ## インストール
 
 ```

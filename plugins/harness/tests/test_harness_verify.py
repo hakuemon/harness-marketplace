@@ -750,3 +750,35 @@ class TestCLIStep2:
         procs.append(run_template_cli(tmp_path / "none.json"))       # 不在 → 2
         assert all(p.returncode != 1 for p in procs)
         assert sorted({p.returncode for p in procs}) == [0, 2]
+
+
+
+# ---------------------------------------------------------------------------
+# テンプレート ↔ スクリプトのマーカー同一性(v0.3。仕様 §3+実装追補6)
+# ---------------------------------------------------------------------------
+
+class TestTemplateMarkerSync:
+    """マーカー文字列の正準はテンプレート、スクリプトは同一文字列の再現。
+    どちらかが単独で変わったら本テストが赤になる(単一情報源の機械検証)。"""
+
+    TPL = Path(__file__).parent.parent / "skills" / "init" / "templates" / "rules.md.template"
+
+    def test_template_ships_exact_marker_pairs(self):
+        text = self.TPL.read_text(encoding="utf-8")
+        for name in hv.SECTION_NAMES:
+            assert hv.begin_marker(name) in text, f"BEGIN 不一致: {name}"
+            assert hv.end_marker(name) in text, f"END 不一致: {name}"
+
+    def test_template_marker_count_exactly_one_pair_each(self):
+        text = self.TPL.read_text(encoding="utf-8")
+        for name in hv.SECTION_NAMES:
+            assert text.count(hv.begin_marker(name)) == 1
+            assert text.count(hv.end_marker(name)) == 1
+
+    def test_shipped_template_sections_extractable(self):
+        """出荷状態のテンプレートからマーカー抽出が成立する(B-MARKER にならない)。"""
+        lines = self.TPL.read_text(encoding="utf-8").split("\n")
+        for name in hv.SECTION_NAMES:
+            body, err = hv.extract_section(lines, name)
+            assert err is None, f"{name}: {err}"
+            assert body, f"{name}: 本文が空(未生成プレースホルダ行があるはず)"

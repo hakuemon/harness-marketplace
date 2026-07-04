@@ -46,7 +46,7 @@ disable-model-invocation: true
 | `.claude/harness-rules.json` | `harness-rules.json.template` | **ルール定義の正**。protect-harness-files 系の固定ルール(**-bash companion 含む 4 件**)は必ず含め、削除・改名しない |
 | `.claude/settings.json` | `settings.json.template` | L1: `layer:"permission"` ルールの deny を反映(固定の自己保護 deny 6 件+プロジェクト固有分) |
 | `.claude/settings.local.json` | `settings.local.json.template` | `autoMemoryDirectory` を**絶対パス**で設定(下記の注意参照) |
-| `docs/claude/rules.md` | `rules.md.template` | NEVER/CONFIRM(機械化)節を harness-rules.json から**生成**して埋める。散文 CONFIRM はインタビューから記入。Bash 書込禁止の注記とモード別実効性の注記はテンプレート組み込み |
+| `docs/claude/rules.md` | `rules.md.template` | NEVER/CONFIRM(機械化)節は `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/harness-verify.py render` の実行で生成する(テンプレートの BEGIN/END マーカー間に f(harness-rules.json) を決定的に描画。手書き・Claude による直接記入はしない)。散文 CONFIRM はインタビューから記入。Bash 書込禁止の注記とモード別実効性の注記はテンプレート組み込み |
 | `docs/claude/operation.md` | `operation.md.template` | 運用サイクル+Auto memory 規約+運用観察項目 |
 | `docs/claude/checklist.md` | `checklist.md.template` | 状態とタスクの単一情報源 |
 | `docs/claude/deviation-log.md` | `deviation-log.md.template` | 逸脱記録。初期構築の記録と python3 検証結果を記入 |
@@ -82,10 +82,11 @@ disable-model-invocation: true
 
 ## Phase 3: レポートと検証
 
-1. 生成・変更したファイルの一覧と各ファイルの役割を報告する
-2. ユーザーに検証手順を提示する:
+1. `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/harness-verify.py check --root <プロジェクトルート>` を実行し、全チェック緑(exit 0)を確認する。所見(exit 2)があれば Phase 2 の生成物を修正してから進む(v0.3)
+2. 生成・変更したファイルの一覧と各ファイルの役割を報告する
+3. ユーザーに検証手順を提示する:
    - **新しいセッションを開始する**(CLAUDE.md・フック設定はセッション開始時に読み込まれる)
    - **`/hooks` で PreToolUse に harness@meta-harness 由来のフック 2 件(編集系・Bash)が実在することを確認する**(v0.2.1: プラグインのインストール/更新直後はフックがロードされないことがある — フック不在のままテストや自律運用を始めない)
    - **ワークスペース信頼ダイアログを承認する**(settings.local.json の autoMemoryDirectory は承認後に有効。承認前に自律実行を始めない)
    - マーケットプレイス README のスモークテスト(L1 貫通・L2 deny/ask・bypass 変換・Bash companion・破損クローズ)を実施する
-3. 未完了の項目(advisory に分類した昇格候補ルール、python3 不在時の L2 保留、companion を見送った path_glob ルールなど)を deviation-log.md の「残課題」節に記録する
+4. 未完了の項目(advisory に分類した昇格候補ルール、python3 不在時の L2 保留、companion を見送った path_glob ルールなど)を deviation-log.md の「残課題」節に記録する
