@@ -1,24 +1,27 @@
 # ルール定義
 
 **運用上の正は `.claude/harness-rules.json`。**「生成」マーク付きの節は JSON からの描画結果であり、**直接編集禁止**。
-変更フロー: harness-rules.json を編集(**実行エージェント=Claude Code は不可侵**。起草は書込手段を持たない隔離環境〔Claude.ai 等〕で行い、人間が内容を確認した上で貼付する=レビューゲート)→ 本ファイルの該当節を再生成 → deviation-log.md に記録。
+変更フロー: harness-rules.json を編集(**実行エージェント=Claude Code は不可侵**。起草は書込手段を持たない隔離環境〔Claude.ai 等〕で行い、人間が内容を確認した上で貼付する=レビューゲート)→ `harness-verify.py render` で本ファイルの生成節を再生成(`/harness:verify` が dry-run diff → 人間の承諾 → render を案内する)→ deviation-log.md に記録。
 
 ## NEVER — 絶対禁止(機械強制: L1 permission / L2 hook)
 
-<!-- GENERATED FROM .claude/harness-rules.json (action=deny, layer=permission|hook) — DO NOT EDIT -->
-{{GENERATED_NEVER_SECTION}}
+<!-- BEGIN GENERATED: never-enforced — source: .claude/harness-rules.json — DO NOT EDIT -->
+(未生成: `/harness:verify` の render、または `harness-verify.py render` が生成する)
+<!-- END GENERATED: never-enforced -->
 
 > **Bash 経由でも同じ。**上記の保護(path_glob / permission)は編集ツールを対象とするが、Bash のリダイレクト(`>` `>>`)・`sed -i`・`tee`・`cp`/`mv` 等による書き込みも**同様に禁止**である。代表的パターンは companion ルール(`*-bash`)が機械的にブロックするが、regex に拾われない書き方でも禁止の意味は変わらない。**編集ツールが失敗しても、Bash を代替手段にしないこと。**失敗したら停止して人間に報告する。
 
 ## NEVER — advisory(強制なし。プロンプト遵守+L3 実装後の昇格候補)
 
-<!-- GENERATED FROM .claude/harness-rules.json (layer=advisory) — DO NOT EDIT -->
-{{GENERATED_ADVISORY_SECTION}}
+<!-- BEGIN GENERATED: never-advisory — source: .claude/harness-rules.json — DO NOT EDIT -->
+(未生成: `/harness:verify` の render、または `harness-verify.py render` が生成する)
+<!-- END GENERATED: never-advisory -->
 
 ## CONFIRM — 機械化分(実行時バックストップ)
 
-<!-- GENERATED FROM .claude/harness-rules.json (action=ask) — DO NOT EDIT -->
-{{GENERATED_CONFIRM_SECTION}}
+<!-- BEGIN GENERATED: confirm-machine — source: .claude/harness-rules.json — DO NOT EDIT -->
+(未生成: `/harness:verify` の render、または `harness-verify.py render` が生成する)
+<!-- END GENERATED: confirm-machine -->
 
 > **注意: 上記の ask/deny は Plan mode 承認の代替ではない。**該当操作は事前に operation.md の計画手順(Plan → Review)を踏むこと。バックストップが発動した状態は「規約をすり抜けて実行に達した」ことを意味する。
 >

@@ -8,8 +8,8 @@
     {
       "name": "harness",
       "source": "./plugins/harness",
-      "description": "ハーネス初期構築(initializer)+ NEVER/CONFIRM ルール強制エンジン(PreToolUse フック)",
-      "version": "0.2.2",
+      "description": "ハーネス初期構築(initializer)+ NEVER/CONFIRM ルール強制エンジン(PreToolUse フック)+整合検証(/harness:verify)",
+      "version": "0.3.0",
       "category": "workflow",
       "tags": [
         "harness",
