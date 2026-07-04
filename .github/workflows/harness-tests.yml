@@ -1,18 +1,21 @@
 name: harness-guard tests
 
 # 設計レビュー指摘1への対応: エンジン改修時の回帰を自動検出する。
-# harness-guard.py は標準ライブラリのみ・テスト依存は pytest のみ。
+# 指摘2への対応: harness-verify.py のテストとテンプレート lint を含む。
+# 両スクリプトとも標準ライブラリのみ・テスト依存は pytest のみ。
 
 on:
   push:
     paths:
       - "plugins/harness/scripts/**"
       - "plugins/harness/tests/**"
+      - "plugins/harness/skills/init/templates/harness-rules.json.template"
       - ".github/workflows/harness-tests.yml"
   pull_request:
     paths:
       - "plugins/harness/scripts/**"
       - "plugins/harness/tests/**"
+      - "plugins/harness/skills/init/templates/harness-rules.json.template"
   workflow_dispatch:
 
 jobs:
@@ -30,6 +33,14 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install pytest
         run: pip install pytest
-      - name: Run harness-guard tests
+      - name: Run harness tests (guard + verify)
         working-directory: plugins/harness
         run: python3 -m pytest tests/ -v
+      - name: Template lint (harness-verify template)
+        # 設計レビュー指摘2の派生: v0.2.2 の no-merge-on-manual 重複(PR #8)は
+        # この lint が PR 時点で CI を赤にして止めていた
+        working-directory: plugins/harness
+        run: >
+          python3 scripts/harness-verify.py template
+          skills/init/templates/harness-rules.json.template
+          --expect-rules 10
